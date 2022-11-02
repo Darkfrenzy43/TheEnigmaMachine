@@ -42,8 +42,7 @@ class Direction(enum.Enum):
 
 def get_plugboard_input():
     """ Function gets user input of where plugboards are throughout rotor (according to the project instructions).
-
-    Returns: list of the three pairs of inputs to be switched. <-- make better
+    Updates plugboard_wires accordingly.
 
     ASSUMING GOOD INPUT FOR NOW
 
@@ -104,8 +103,6 @@ def get_plugboard_input():
 
     # debug print out statement
     print(plugboard_wires);
-
-    return
 
 
 
@@ -226,6 +223,7 @@ def enigma(plaintext_input,  rotation, rotor_start = 0):
         ciphertext_output += ALPHABETS[rotor_out_output]
 
         # Finally, turn rotor clockwise/counterclockwise once depending on input
+        # TODO - GET INPUT FOR THIS
         offset = 0;
         if rotation == "O":
             offset = -1;
