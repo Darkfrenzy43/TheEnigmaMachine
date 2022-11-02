@@ -23,12 +23,13 @@ rotor_wires = [[0, 0], [1, 2], [2, 1], [3, 3], [4, 6], [5, 4], [6, 5], [7, 7], [
 # ^ change to wires?
 
 
+# the indices of the plugboard_wires, and the value at each index is the corresponding inside port mapped to it
 # Creating an array of the wire mapping for the plug board. Default with each keyboard outside port mapping
 # to same corresponding inside port. After the plugboard input, these never change value. [inside, outside]
 plugboard_wires = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10], [11, 11]]
 
 
-# TODO - add decrypt functionality in enigma
+
 # TODO - add header
 
 
@@ -40,76 +41,94 @@ class Direction(enum.Enum):
     COUNTERCLOCKWISE = 3;
 
 
+def get_rotation_direction():
+    """ Function prompts user for direction input. If "D" inputted, direction returned is CLOCKWISE.
+    If "O" inputted, direction returned is COUNTERCLOCKWISE. """
+
+    # ASSUMING GOOD INPUT FOR NOW
+
+    this_input = input("Type in direction character (D or O): \n>").upper();
+
+    if this_input == 'D':
+        return Direction.CLOCKWISE;
+    elif this_input == 'O':
+        return Direction.COUNTERCLOCKWISE;
+    else:
+        print("lol invalid input.");
+
+
+
 def get_plugboard_input():
-    """ Function gets user input of where plugboards are throughout rotor (according to the project instructions).
-    Updates plugboard_wires accordingly.
-
-    ASSUMING GOOD INPUT FOR NOW
-
+    """ Function gets user input of where plugboards are throughout rotor
+    (according to the project instructions). Updates plugboard_wires accordingly.
     """
 
-    # Getting inputs
-    pair1 = input("\nInput first pair of letters of the plugboard (letter_1 letter_2)\n>");
-    pair2 = input("\nInput second pair of letters of the plugboard (letter_1 letter_2)\n>");
-    pair3 = input("\nInput third pair of letters of the plugboard (letter_1 letter_2)\n>");
+    # LET US ASSUME NO BAD INPUT FOR NOW
 
-    # Unpacking , getting plugboard pairs
-    pair1a, pair1b = pair1[0], pair1[2];
-    pair2a, pair2b = pair2[0], pair2[2];
-    pair3a, pair3b = pair3[0], pair3[2];
+    # Loop through to get three plugboard configurations
+    for i in range(3):
 
-    # Not checking for now if the given pairs are actually adjacent ports
-    pair1Ind = [ALPHABETS.index(pair1a), ALPHABETS.index(pair1b)]
-    pair2Ind = [ALPHABETS.index(pair2a), ALPHABETS.index(pair2b)]
-    pair3Ind = [ALPHABETS.index(pair3a), ALPHABETS.index(pair3b)]
+        # Getting the input first
+        input_letters = input(f"\nInput pair {i + 1} of the plugboard configuration (ie: >O I)\n>").upper();
 
-    # write inefficiently for now
+        # Unpacking input to get the letters of the plugboard
+        letterA, letterB = input_letters[0], input_letters[2];
 
-    # note, the indices of the plugboard_wires right now will be the same as their index in the array
-    port1 = plugboard_wires[pair1Ind[0]];
-    port2 = plugboard_wires[pair1Ind[1]];
+        # Getting the corresponding indices of the input letters in ALPHABETS - their locations around the keyboard
+        indexA, indexB = ALPHABETS.index(letterA), ALPHABETS.index(letterB);
 
-    dummy_inside_port = port1[0];
-
-    # Switching the wiring
-    plugboard_wires[pair1Ind[0]][0] = port2[0];
-    plugboard_wires[pair1Ind[1]][0] = dummy_inside_port;
-
-
-
-
-    port1 = plugboard_wires[pair2Ind[0]];
-    port2 = plugboard_wires[pair2Ind[1]];
-
-    dummy_inside_port = port1[0];
-
-    # Switching the wiring
-    plugboard_wires[pair2Ind[0]][0] = port2[0];
-    plugboard_wires[pair2Ind[1]][0] = dummy_inside_port;
-
-
-
-
-    port1 = plugboard_wires[pair3Ind[0]];
-    port2 = plugboard_wires[pair3Ind[1]];
-
-    dummy_inside_port = port1[0];
-
-    # Switching the wiring
-    plugboard_wires[pair3Ind[0]][0] = port2[0];
-    plugboard_wires[pair3Ind[1]][0] = dummy_inside_port;
-
+        # Retrieving the corresponding wire of the inputted letters
+        wireA, wireB = plugboard_wires[indexA], plugboard_wires[indexB];   # Get copy of the letter's wires
+        wireA_in_temp = wireA[0]; # Creating dummy var for the switch
+        plugboard_wires[indexA][0] = wireB[0];
+        plugboard_wires[indexB][0] = wireA_in_temp;
 
 
     # debug print out statement
     print(plugboard_wires);
 
 
+def pass_thru_plugboard(port_a, direction):
+    """ Function responsible for getting corresponding output of an input <port_a>
+    according to the set plugboard configuration.
+
+    I guess we'll say this works just like pass_thru_rotor()
+
+    #todo fill in docstring properly later """
+
+    # Default port_b to be -1 for error case
+    port_b = -1;
+
+    # If the direction is keyboard -> inside...
+    if direction == Direction.IN:
+
+        # Return the corresponding inside port
+        port_b = plugboard_wires[port_a][0];
+
+    # If the direction is inside -> keyboard...
+    elif direction == Direction.OUT:
+
+        # Find the inside port port_a and return the corresponding outside port
+        for this_wire in plugboard_wires:
+
+            inside_port = this_wire[0];
+
+            if port_a == inside_port:
+                port_b = this_wire[1];
+
+
+    # Handling error case
+    if port_b < 0:
+        raise TypeError("Invalid port_a input - no corresponding port_b found.");
+    else:
+        return port_b;
+
+
 
 # port_a:int - the port you're starting at in the rotor
 # direction : Direction - IN, OUT
 # returns: port_b:int - the other side of the wire, connected to port_a
-def get_corresponding_output(port_a, direction):
+def pass_thru_rotor(port_a, direction):
     """ Finds the corresponding output port with the provided <port_a> input port, depending on current
     rotor_wires value. 
     
@@ -177,14 +196,13 @@ def turn_rotor(offset):
 
 
 
-# reflects
 def reflector(i):
     """ Returns the corresponding reflected output port depending on the passed in <i>, the input port. """ # Fix
     return REFLECTOR_DICT[i]
 
 
 # main enigma code
-def enigma(plaintext_input,  rotation, rotor_start = 0):
+def enigma(plaintext_input,  rot_direction, rotor_start = 0):
     """ Enciphers <plaintext_input> string through enigma machine, with the initial rotor
     position at <rotor_start := default 0>.
 
@@ -208,26 +226,29 @@ def enigma(plaintext_input,  rotation, rotor_start = 0):
         # Find the corresponding keyboard of the letter around the torotr
         letter_position = ALPHABETS.index(letter)
 
-        # TODO - plugboard here
+        # Pass the letter position inwards through plugboard first
+        plugboard_in_output = pass_thru_plugboard(letter_position, Direction.IN);
 
         # Pass the plaintext through rotor inwards
-        rotor_in_output = get_corresponding_output(letter_position, Direction.IN);
+        rotor_in_output = pass_thru_rotor(plugboard_in_output, Direction.IN);
 
         # "Reflect" the input through reflector
         reflector_output = reflector(rotor_in_output)
 
         # Pass the reflected output through rotor outwards - results in its ciphertext
-        rotor_out_output = get_corresponding_output(reflector_output, Direction.OUT);
+        rotor_out_output = pass_thru_rotor(reflector_output, Direction.OUT);
+
+        # Pass the rotor_out_output through plugboard outwards
+        plugboard_out_output = pass_thru_plugboard(rotor_out_output, Direction.OUT);
 
         # Add enciphered letter to ciphertext string
-        ciphertext_output += ALPHABETS[rotor_out_output]
+        ciphertext_output += ALPHABETS[plugboard_out_output];
 
-        # Finally, turn rotor clockwise/counterclockwise once depending on input
-        # TODO - GET INPUT FOR THIS
+        # Finally, turn rotor clockwise/counterclockwise once depending on rot_direction
         offset = 0;
-        if rotation == "O":
+        if rot_direction == Direction.COUNTERCLOCKWISE:
             offset = -1;
-        elif rotation == "D":
+        elif rot_direction == Direction.CLOCKWISE:
             offset = 1;
         turn_rotor(offset);
 
@@ -241,19 +262,28 @@ if __name__ == "__main__":
     # Get plugboard input first
     get_plugboard_input();
 
+    # Get rotation direction
+    rotation = get_rotation_direction();
 
-    plaintext = input("Enter enigma machine input:\n")  # can replace by just text for testing
+    # Get plaintext input
+    plaintext = input("Enter enigma machine input:\n")
 
+    # Get initial position - if input invalid, raises error
     try:
-
         initial_position: int = ALPHABETS.index \
-            (input("Enter the initial position - the letter on the dashed line:\n").upper())  # can replace by offset
-        # for testing
+            (input("Enter the initial position - the letter on the dashed line:\n").upper())
+
     except ValueError:
         print("Invalid initial position, good bye")
         exit(1)
 
-    print(plaintext.upper() + "\n" + enigma(plaintext, "D", initial_position))
+    # Get ciphertext
+    ciphertext = enigma(plaintext, rotation, initial_position);
+
+    # Print ciphertext
+    print("\nPlaintext: " + plaintext.upper() + "\nCiphertext: " + ciphertext);
+
+
 
 # dead code :
 ########################################################################################################################
