@@ -12,7 +12,7 @@
     NOTE: THIS VERSION OF THE CODE ASSUMES THAT THERE WILL ALWAYS BE GOOD INPUT - in the best interest of time,
     no bad input filters have been implemented.
 
-    Notes:
+    Notes on Design Implementations:
 
         1 - The ALPHABETS array contains the 12 corresponding letters surrounding the circular keyboard. Each of
         their indices represent their designated "keyboard port", ie. 'E' is associated with keyboard port 0,
